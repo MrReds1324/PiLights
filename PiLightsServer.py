@@ -247,6 +247,6 @@ def appear_from_back_set():
     return '{"success": True}'
 
 
-# pixels.clear()
-# pixels.show()
+pixels.clear()
+pixels.show()
 run(host='localhost', port=8080, debug=True)
