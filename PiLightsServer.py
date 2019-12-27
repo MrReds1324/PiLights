@@ -6,7 +6,10 @@ import Adafruit_WS2801
 import Adafruit_GPIO.SPI as SPI
 # Import bottle simple http server
 from bottle import run, post, request, response
+# Dynamically find IP
+import socket
 
+IP = ""
 PIXEL_COUNT = 31
 # Alternatively specify a hardware SPI connection on /dev/spidev0.0:
 SPI_PORT = 0
@@ -15,6 +18,11 @@ INTENSITY = 10
 
 pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
 
+def get_IP():
+    global IP
+    soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    soc.connect(('8.8.8.8', 1))
+    IP = soc.getsockname()[0]
 
 # Define the wheel function to interpolate between different hues.
 def wheel(pos):
@@ -249,4 +257,6 @@ def appear_from_back_set():
 
 pixels.clear()
 pixels.show()
-run(host='localhost', port=8080, debug=True)
+get_IP()
+print(IP)
+run(host=IP, port=8080, debug=True)
