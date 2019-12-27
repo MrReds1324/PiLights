@@ -11,9 +11,10 @@ PIXEL_COUNT = 31
 # Alternatively specify a hardware SPI connection on /dev/spidev0.0:
 SPI_PORT = 0
 SPI_DEVICE = 0
+INTENSITY = 255
 
 
-# pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
+pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
 
 
 # Define the wheel function to interpolate between different hues.
@@ -115,21 +116,21 @@ def appear_from_back(pixels, color=(255, 0, 0)):
 
 
 @post('/rainbowS')
-def rainbow_sequence():
+def rainbow_sequence_set():
     req_obj = json.loads(request.body.read())
     print(req_obj)
     return "{state: 1}"
 
 
 @post('/rainbowC')
-def rainbow_cycle():
+def rainbow_cycle_set():
     req_obj = json.loads(request.body.read())
     print(req_obj)
     return "{state: 2}"
 
 
 @post('/rainbowColors')
-def rainbow_colors():
+def rainbow_colors_set():
     req_obj = json.loads(request.body.read())
     print(req_obj)
     return "{state: 3}"
@@ -143,10 +144,33 @@ def solid():
 
 
 @post('/intensity')
-def brightness_decrease():
+def intensity_set():
+    global INTENSITY
     req_obj = json.loads(request.body.read())
-    print(req_obj)
+    intensity_target = req_obj.get('target')
+    wait_time = 0.1
+    if req_obj.get('wait'):
+        wait_time = req_obj.get('wait')
+    step_size = 1
+    if req_obj.get('step_size'):
+        step_size = req_obj.get('stepSize')
+    if intensity_target > INTENSITY:
+        brightness_increase(pixels, min(256, intensity_target - INTENSITY), wait_time, step_size)
+        INTENSITY = min(255, intensity_target)
+    elif intensity_target < INTENSITY:
+        brightness_decrease(pixels, min(256, INTENSITY - intensity_target), wait_time, step_size)
+        INTENSITY = max(0, intensity_target)
+    return "{intensity: " + str(INTENSITY) + "}"
+
+
+@post('/appearfromback')
+def appear_from_back_set():
+    req_obj = json.loads(request.body.read())
+    item = req_obj.get('target')
+    print(item)
     return "{state: 4}"
 
 
+# pixels.clear()
+# pixels.show()
 run(host='localhost', port=8080, debug=True)
