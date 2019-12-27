@@ -128,7 +128,7 @@ def appear_from_back(pixels, color=(255, 0, 0)):
             time.sleep(0.02)
 
 
-def solid_colors(pixels, r, g, b, wait=0.05):
+def solid_colors(pixels, r, g, b, wait=0):
     for i in range(pixels.count()):
         pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(r, g, b))
         set_intensity(i)
@@ -137,7 +137,7 @@ def solid_colors(pixels, r, g, b, wait=0.05):
             time.sleep(wait)
 
 
-def solid_array(pixels, arr, wait=0.05):
+def solid_array(pixels, arr, wait=0):
     for i in range(pixels.count()):
         pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(arr[i][0], arr[i][1], arr[i][2]))
         set_intensity(i)
@@ -192,7 +192,7 @@ def rainbow_colors_set():
 @post('/solid')
 def solid_set():
     req_obj = json.loads(request.body.read())
-    wait_time = 0.05
+    wait_time = 0
     if req_obj.get('wait'):
         wait_time = req_obj.get('wait')
     red = 0
@@ -210,7 +210,7 @@ def solid_set():
 @post('/solidArr')
 def solid_arr_set():
     req_obj = json.loads(request.body.read())
-    wait_time = 0.05
+    wait_time = 0
     if req_obj.get('wait'):
         wait_time = req_obj.get('wait')
     colors = [(255, 0, 4)] * PIXEL_COUNT
