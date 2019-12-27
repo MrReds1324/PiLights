@@ -11,7 +11,7 @@ PIXEL_COUNT = 31
 # Alternatively specify a hardware SPI connection on /dev/spidev0.0:
 SPI_PORT = 0
 SPI_DEVICE = 0
-INTENSITY = 255
+INTENSITY = 10
 
 
 pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
@@ -37,6 +37,7 @@ def rainbow_cycle_successive(pixels, wait=0.1):
         # Then add in j which makes the colors go around per pixel
         # the % 96 is to make the wheel cycle around
         pixels.set_pixel(i, wheel(((i * 256 // pixels.count())) % 256))
+        set_intensity(i)
         pixels.show()
         if wait > 0:
             time.sleep(wait)
@@ -115,11 +116,27 @@ def appear_from_back(pixels, color=(255, 0, 0)):
             time.sleep(0.02)
 
 
+def set_intensity(index):
+    try:
+        r, g, b = pixels.get_pixel_rgb(index)
+        ratio = INTENSITY/255
+        r = int(r * ratio)
+        g = int(g * ratio)
+        b = int(b * ratio)
+        pixels.set_pixel(index, Adafruit_WS2801.RGB_to_color(r, g, b))
+    except():
+        return False
+    return True
+
+
 @post('/rainbowS')
 def rainbow_sequence_set():
     req_obj = json.loads(request.body.read())
-    print(req_obj)
-    return "{state: 1}"
+    wait_time = 0.1
+    if req_obj.get('wait'):
+        wait_time = req_obj.get('wait')
+    rainbow_cycle_successive(pixels, wait_time)
+    return '{"success": True}'
 
 
 @post('/rainbowC')
@@ -148,18 +165,24 @@ def intensity_set():
     global INTENSITY
     req_obj = json.loads(request.body.read())
     intensity_target = req_obj.get('target')
-    wait_time = 0.1
+    wait_time = 0.01
     if req_obj.get('wait'):
         wait_time = req_obj.get('wait')
     step_size = 1
     if req_obj.get('step_size'):
         step_size = req_obj.get('stepSize')
-    if intensity_target > INTENSITY:
-        brightness_increase(pixels, min(256, intensity_target - INTENSITY), wait_time, step_size)
-        INTENSITY = min(255, intensity_target)
-    elif intensity_target < INTENSITY:
-        brightness_decrease(pixels, min(256, INTENSITY - intensity_target), wait_time, step_size)
-        INTENSITY = max(0, intensity_target)
+    if req_obj.get('force') and req_obj.get('force') == "True":
+        if intensity_target > INTENSITY:
+            INTENSITY = min(255, intensity_target)
+        else:
+            INTENSITY = max(0, intensity_target)
+    else:
+        if intensity_target > INTENSITY:
+            brightness_increase(pixels, min(256, intensity_target - INTENSITY), wait_time, step_size)
+            INTENSITY = min(255, intensity_target)
+        elif intensity_target < INTENSITY:
+            brightness_decrease(pixels, min(256, INTENSITY - intensity_target), wait_time, step_size)
+            INTENSITY = max(0, intensity_target)
     return "{intensity: " + str(INTENSITY) + "}"
 
 
