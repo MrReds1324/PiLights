@@ -128,9 +128,9 @@ def appear_from_back(pixels, color=(255, 0, 0)):
             time.sleep(0.02)
 
 
-def solid_colors(pixels, r, g, b, wait=0):
+def solid_colors(pixels, r, b, g, wait=0):
     for i in range(pixels.count()):
-        pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(r, g, b))
+        pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(r, b, g))
         set_intensity(i)
         pixels.show()
         if wait > 0:
@@ -148,12 +148,12 @@ def solid_array(pixels, arr, wait=0):
 
 def set_intensity(index):
     try:
-        r, g, b = pixels.get_pixel_rgb(index)
+        r, b, g = pixels.get_pixel_rgb(index)
         ratio = INTENSITY / 255
         r = int(r * ratio)
         g = int(g * ratio)
         b = int(b * ratio)
-        pixels.set_pixel(index, Adafruit_WS2801.RGB_to_color(r, g, b))
+        pixels.set_pixel(index, Adafruit_WS2801.RGB_to_color(r, b, g))
     except():
         return False
     return True
@@ -204,7 +204,7 @@ def solid_set():
     blue = 0
     if req_obj.get('blue'):
         blue = req_obj.get('blue')
-    solid_colors(pixels, red, green, blue, wait_time)
+    solid_colors(pixels, red, blue, green, wait_time)
     return '{"success": True}'
 
 @post('/solidArr')
