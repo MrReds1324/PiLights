@@ -13,7 +13,6 @@ SPI_PORT = 0
 SPI_DEVICE = 0
 INTENSITY = 10
 
-
 pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
 
 
@@ -47,6 +46,7 @@ def rainbow_cycle(pixels, wait=0.005):
     for j in range(256):  # one cycle of all 256 colors in the wheel
         for i in range(pixels.count()):
             pixels.set_pixel(i, wheel(((i * 256 // pixels.count()) + j) % 256))
+            set_intensity(i)
         pixels.show()
         if wait > 0:
             time.sleep(wait)
@@ -56,6 +56,7 @@ def rainbow_colors(pixels, wait=0.05):
     for j in range(256):  # one cycle of all 256 colors in the wheel
         for i in range(pixels.count()):
             pixels.set_pixel(i, wheel(((256 // pixels.count() + j)) % 256))
+            set_intensity(i)
         pixels.show()
         if wait > 0:
             time.sleep(wait)
@@ -94,6 +95,7 @@ def blink_color(pixels, blink_times=5, wait=0.5, color=(255, 0, 0)):
         for j in range(2):
             for k in range(pixels.count()):
                 pixels.set_pixel(k, Adafruit_WS2801.RGB_to_color(color[0], color[1], color[2]))
+                set_intensity(k)
             pixels.show()
             time.sleep(0.08)
             pixels.clear()
@@ -110,16 +112,36 @@ def appear_from_back(pixels, color=(255, 0, 0)):
             # first set all pixels at the begin
             for k in range(i):
                 pixels.set_pixel(k, Adafruit_WS2801.RGB_to_color(color[0], color[1], color[2]))
+                set_intensity(k)
             # set then the pixel at position j
             pixels.set_pixel(j, Adafruit_WS2801.RGB_to_color(color[0], color[1], color[2]))
+            set_intensity(j)
             pixels.show()
             time.sleep(0.02)
+
+
+def solid_colors(pixels, r, g, b, wait=0.05):
+    for i in range(pixels.count()):
+        pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(r, g, b))
+        set_intensity(i)
+        pixels.show()
+        if wait > 0:
+            time.sleep(wait)
+
+
+def solid_array(pixels, arr, wait=0.05):
+    for i in range(pixels.count()):
+        pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(arr[i][0], arr[i][1], arr[i][2]))
+        set_intensity(i)
+        pixels.show()
+        if wait > 0:
+            time.sleep(wait)
 
 
 def set_intensity(index):
     try:
         r, g, b = pixels.get_pixel_rgb(index)
-        ratio = INTENSITY/255
+        ratio = INTENSITY / 255
         r = int(r * ratio)
         g = int(g * ratio)
         b = int(b * ratio)
@@ -142,23 +164,52 @@ def rainbow_sequence_set():
 @post('/rainbowC')
 def rainbow_cycle_set():
     req_obj = json.loads(request.body.read())
-    print(req_obj)
-    return "{state: 2}"
+    wait_time = 0.005
+    if req_obj.get('wait'):
+        wait_time = req_obj.get('wait')
+    rainbow_cycle(pixels, wait_time)
+    return '{"success": True}'
 
 
 @post('/rainbowColors')
 def rainbow_colors_set():
     req_obj = json.loads(request.body.read())
-    print(req_obj)
-    return "{state: 3}"
+    wait_time = 0.05
+    if req_obj.get('wait'):
+        wait_time = req_obj.get('wait')
+    rainbow_colors(pixels, wait_time)
+    return '{"success": True}'
 
 
 @post('/solid')
-def solid():
+def solid_set():
     req_obj = json.loads(request.body.read())
-    print(req_obj)
-    return "{state: 3}"
+    wait_time = 0.05
+    if req_obj.get('wait'):
+        wait_time = req_obj.get('wait')
+    red = 0
+    if req_obj.get('red'):
+        red = req_obj.get('red')
+    green = 0
+    if req_obj.get('green'):
+        red = req_obj.get('green')
+    blue = 0
+    if req_obj.get('blue'):
+        red = req_obj.get('blue')
+    solid_colors(pixels, red, green, blue, wait_time)
+    return '{"success": True}'
 
+@post('/solidArr')
+def solid_arr_set():
+    req_obj = json.loads(request.body.read())
+    wait_time = 0.05
+    if req_obj.get('wait'):
+        wait_time = req_obj.get('wait')
+    colors = [(255, 0, 4)] * PIXEL_COUNT
+    if req_obj.get('colors'):
+        colors = req_obj.get('colors')
+    solid_array(pixels, colors, wait_time)
+    return '{"success": True}'
 
 @post('/intensity')
 def intensity_set():
@@ -189,9 +240,11 @@ def intensity_set():
 @post('/appearfromback')
 def appear_from_back_set():
     req_obj = json.loads(request.body.read())
-    item = req_obj.get('target')
-    print(item)
-    return "{state: 4}"
+    color = (255, 0, 4)
+    if req_obj.get('color'):
+        color = req_obj.get('color')
+    appear_from_back(pixels, color)
+    return '{"success": True}'
 
 
 # pixels.clear()
