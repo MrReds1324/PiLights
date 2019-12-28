@@ -195,15 +195,14 @@ def solid_set():
     wait_time = 0
     if req_obj.get('wait'):
         wait_time = req_obj.get('wait')
-    red = 0
-    if req_obj.get('red'):
-        red = req_obj.get('red')
+    red = 255
     green = 0
-    if req_obj.get('green'):
-        green = req_obj.get('green')
-    blue = 0
-    if req_obj.get('blue'):
-        blue = req_obj.get('blue')
+    blue = 4
+    if req_obj.get('color'):
+        color = req_obj.get('color')
+        red = color[0]
+        green = color[1]
+        blue = color[2]
     solid_colors(pixels, red, blue, green, wait_time)
     return '{"success": True}'
 
