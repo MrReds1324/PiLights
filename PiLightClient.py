@@ -143,14 +143,26 @@ class Ui_MainWindow(object):
         self.rainbowColorsButton.clicked.connect(self.rainbowColors)
         self.rainbowCycleButton.clicked.connect(self.rainbowCycle)
         self.rainbowSequenceButton.clicked.connect(self.rainbowSequence)
+        self.intensityButton.clicked.connect(self.setIntesity)
+        self.animateIntensityButton.clicked.connect(self.animateIntesnity)
+        self.ipLine.returnPressed.connect(self.setIP)
+        self.waitLine.returnPressed.connect(self.setWait)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def openColorDialog(self):
         color = QColorDialog.getColor()
         self.COLOR = color
 
-    def buildJson(self):
-        test = 0
+    def setIP(self):
+        self.IP = self.ipLine.text()
+        self.CONNECTION = http.client.HTTPConnection(self.IP, 8080)
+
+    def setWait(self):
+        self.WAIT = float(self.waitLine.text())
+
+    def buildGenericJSON(self):
+        data = {'wait': self.WAIT, 'target': self.intensitySlider.value(), 'color': [self.COLOR.red(), self.COLOR.green(), self.COLOR.blue()]}
+        return data
 
     def sendSolidColor(self):
         self.CONNECTION.request('POST', '/solid', '{"wait": 0.0, "red": 40, "green": 0, "blue": 0}')
@@ -163,7 +175,12 @@ class Ui_MainWindow(object):
         print(doc)
 
     def setIntesity(self):
-        self.CONNECTIONrequest('POST', '/intensity', '{"target": 20, "force": "False"}')
+        self.CONNECTION.request('POST', '/intensity', '{"target": 20, "force": "True"}')
+        doc = self.CONNECTION.getresponse().read()
+        print(doc)
+
+    def animateIntesnity(self):
+        self.CONNECTION.request('POST', '/intensity', '{"target": 20, "force": "False"}')
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
@@ -213,7 +230,7 @@ class Ui_MainWindow(object):
         self.waitLabel.setText(_translate("MainWindow", "Wait Time"))
         self.waitLine.setText(_translate("MainWindow", "0.01"))
         self.ipLabel.setText(_translate("MainWindow", "IP Address"))
-        self.ipLine.setText(_translate("MainWindow", "127.0.0.1"))
+        self.ipLine.setText(_translate("MainWindow", "192.168.1.223"))
 
 
 if __name__ == "__main__":
