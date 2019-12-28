@@ -5,41 +5,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QColorDialog
 
-c = http.client.HTTPConnection('192.168.1.223', 8080)
-
-# c.request('POST', '/intensity', '{"target": 20, "force": "False"}')
-# doc = c.getresponse().read()
-# print(doc)
-#
-# c.request('POST', '/rainbowS', '{"wait": 0.01}')
-# doc = c.getresponse().read()
-# print(doc)
-#
-# c.request('POST', '/rainbowC', '{"wait": 0.01}')
-# doc = c.getresponse().read()
-# print(doc)
-#
-c.request('POST', '/rainbowColors', '{"wait": 0.01}')
-doc = c.getresponse().read()
-print(doc)
-#
-c.request('POST', '/solid', '{"wait": 0.0, "red": 40, "green": 0, "blue": 0}')
-doc = c.getresponse().read()
-print(doc)
-
-
-# c.request('POST', '/solidArr', '{"wait": 0.0}')
-# doc = c.getresponse().read()
-# print(doc)
-
-
-c.request('POST', '/appearfromback', '{"color": [4, 0, 255]}')
-doc = c.getresponse().read()
-print(doc)
-
-# c.request('POST', '/intensity', '{"target": 0, "force": "False"}')
-# doc = c.getresponse().read()
-# print(doc)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -74,12 +39,12 @@ class Ui_MainWindow(object):
         self.solidColorButton = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
         self.solidColorButton.setObjectName("solidColorButton")
         self.solidLayout.addWidget(self.solidColorButton)
-        self.fromScreenStatic = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
-        self.fromScreenStatic.setObjectName("fromScreenStatic")
-        self.solidLayout.addWidget(self.fromScreenStatic)
-        self.fromBehindButton_2 = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
-        self.fromBehindButton_2.setObjectName("fromBehindButton_2")
-        self.solidLayout.addWidget(self.fromBehindButton_2)
+        self.fromScreenStaticButton = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
+        self.fromScreenStaticButton.setObjectName("fromScreenStaticButton")
+        self.solidLayout.addWidget(self.fromScreenStaticButton)
+        self.loopFromBackButton = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
+        self.loopFromBackButton.setObjectName("loopFromBackButton")
+        self.solidLayout.addWidget(self.loopFromBackButton)
         self.rainbowGroup = QtWidgets.QGroupBox(self.centralwidget)
         self.rainbowGroup.setGeometry(QtCore.QRect(10, 300, 221, 131))
         self.rainbowGroup.setObjectName("rainbowGroup")
@@ -172,19 +137,58 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.intensitySlider.valueChanged['int'].connect(self.intensityLabel.setNum)
         self.colorPickerButton.clicked.connect(self.openColorDialog)
-        self.solidColorButton.clicked.connect(self.send_solid_color)
+        self.solidColorButton.clicked.connect(self.sendSolidColor)
+        self.loopFromBackButton.clicked.connect(self.loopFromBack)
+        self.fromScreenStaticButton.clicked.connect(self.solidFromScreen)
+        self.rainbowColorsButton.clicked.connect(self.rainbowColors)
+        self.rainbowCycleButton.clicked.connect(self.rainbowCycle)
+        self.rainbowSequenceButton.clicked.connect(self.rainbowSequence)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def openColorDialog(self):
         color = QColorDialog.getColor()
         self.COLOR = color
 
-    def build_json(self):
+    def buildJson(self):
         test = 0
 
-    def send_solid_color(self):
-        print("Sending Solid Color")
+    def sendSolidColor(self):
         self.CONNECTION.request('POST', '/solid', '{"wait": 0.0, "red": 40, "green": 0, "blue": 0}')
+        doc = self.CONNECTION.getresponse().read()
+        print(doc)
+
+    def loopFromBack(self):
+        self.CONNECTION.request('POST', '/appearfromback', '{"color": [4, 0, 255]}')
+        doc = self.CONNECTION.getresponse().read()
+        print(doc)
+
+    def setIntesity(self):
+        self.CONNECTIONrequest('POST', '/intensity', '{"target": 20, "force": "False"}')
+        doc = self.CONNECTION.getresponse().read()
+        print(doc)
+
+    def rainbowSequence(self):
+        self.CONNECTION.request('POST', '/rainbowS', '{"wait": 0.01}')
+        doc = self.CONNECTION.getresponse().read()
+        print(doc)
+
+    def rainbowCycle(self):
+        self.CONNECTION.request('POST', '/rainbowC', '{"wait": 0.01}')
+        doc = self.CONNECTION.getresponse().read()
+        print(doc)
+
+    def rainbowColors(self):
+        self.CONNECTION.request('POST', '/rainbowColors', '{"wait": 0.01}')
+        doc = self.CONNECTION.getresponse().read()
+        print(doc)
+
+    def solidFromScreen(self):
+        self.CONNECTION.request('POST', '/solidArr', '{"wait": 0.0}')
+        doc = self.CONNECTION.getresponse().read()
+        print(doc)
+
+    def animateFromScreen(self):
+        self.CONNECTION.request('POST', '/solidArr', '{"wait": 0.0}')
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
@@ -194,8 +198,8 @@ class Ui_MainWindow(object):
         self.solidGroup.setTitle(_translate("MainWindow", "Solid Colors"))
         self.colorPickerButton.setText(_translate("MainWindow", "Color Picker"))
         self.solidColorButton.setText(_translate("MainWindow", "Solid Color"))
-        self.fromScreenStatic.setText(_translate("MainWindow", "Static From Screen"))
-        self.fromBehindButton_2.setText(_translate("MainWindow", "Loop From Back"))
+        self.fromScreenStaticButton.setText(_translate("MainWindow", "Static From Screen"))
+        self.loopFromBackButton.setText(_translate("MainWindow", "Loop From Back"))
         self.rainbowGroup.setTitle(_translate("MainWindow", "Rainbow"))
         self.rainbowSequenceButton.setText(_translate("MainWindow", "Rainbow Sequence"))
         self.rainbowCycleButton.setText(_translate("MainWindow", "Rainbow Cycle"))
@@ -214,6 +218,7 @@ class Ui_MainWindow(object):
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
