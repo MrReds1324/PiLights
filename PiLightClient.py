@@ -165,47 +165,51 @@ class Ui_MainWindow(object):
         return data
 
     def sendSolidColor(self):
-        self.CONNECTION.request('POST', '/solid', '{"wait": 0.0, "red": 40, "green": 0, "blue": 0}')
+        self.CONNECTION.request('POST', '/solid', json.dumps(self.buildGenericJSON()))
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
     def loopFromBack(self):
-        self.CONNECTION.request('POST', '/appearfromback', '{"color": [4, 0, 255]}')
+        self.CONNECTION.request('POST', '/appearfromback', json.dumps(self.buildGenericJSON()))
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
     def setIntesity(self):
-        self.CONNECTION.request('POST', '/intensity', '{"target": 20, "force": "True"}')
+        data = self.buildGenericJSON()
+        data['force'] = "True"
+        self.CONNECTION.request('POST', '/intensity', json.dumps(data))
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
     def animateIntesnity(self):
-        self.CONNECTION.request('POST', '/intensity', '{"target": 20, "force": "False"}')
+        data = self.buildGenericJSON()
+        data['force'] = "False"
+        self.CONNECTION.request('POST', '/intensity', json.dumps(data))
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
     def rainbowSequence(self):
-        self.CONNECTION.request('POST', '/rainbowS', '{"wait": 0.01}')
+        self.CONNECTION.request('POST', '/rainbowS', json.dumps(self.buildGenericJSON()))
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
     def rainbowCycle(self):
-        self.CONNECTION.request('POST', '/rainbowC', '{"wait": 0.01}')
+        self.CONNECTION.request('POST', '/rainbowC', json.dumps(self.buildGenericJSON()))
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
     def rainbowColors(self):
-        self.CONNECTION.request('POST', '/rainbowColors', '{"wait": 0.01}')
+        self.CONNECTION.request('POST', '/rainbowColors', json.dumps(self.buildGenericJSON()))
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
     def solidFromScreen(self):
-        self.CONNECTION.request('POST', '/solidArr', '{"wait": 0.0}')
+        self.CONNECTION.request('POST', '/solidArr', json.dumps(self.buildGenericJSON()))
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
     def animateFromScreen(self):
-        self.CONNECTION.request('POST', '/solidArr', '{"wait": 0.0}')
+        self.CONNECTION.request('POST', '/solidArr', json.dumps(self.buildGenericJSON()))
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
