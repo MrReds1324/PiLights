@@ -1,18 +1,39 @@
 import http.client
 import json
+import threading
 import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QColorDialog
-
+import queue
 
 class Ui_MainWindow(object):
+
+    def worker(self):
+        while True:
+            item = self.QUEUE.get()
+            if item is None:
+                print("EXITING WORKER")
+                break
+            self.QUEUE.task_done()
+
+    def start_worker(self):
+        thread = threading.Thread(target=self.worker)
+        thread.start()
+        return thread
+
+    def stop_worker(self):
+        self.QUEUE.put(None)
+        self.WORKER.join()
+
     def setupUi(self, MainWindow):
         self.COLOR = QColor(255, 0, 4)
         self.INTENSITY = 0
         self.IP = "127.0.0.1"
         self.WAIT = 0.01
         self.CONNECTION = http.client.HTTPConnection('192.168.1.223', 8080)
+        self.QUEUE = queue.Queue()
+        self.WORKER = self.start_worker()
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(242, 581)
@@ -213,6 +234,9 @@ class Ui_MainWindow(object):
         doc = self.CONNECTION.getresponse().read()
         print(doc)
 
+    def closeEvent(self, event):
+        print("close")
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "PiLights"))
@@ -224,7 +248,7 @@ class Ui_MainWindow(object):
         self.rainbowGroup.setTitle(_translate("MainWindow", "Rainbow"))
         self.rainbowSequenceButton.setText(_translate("MainWindow", "Rainbow Sequence"))
         self.rainbowCycleButton.setText(_translate("MainWindow", "Rainbow Cycle"))
-        self.rainbowColorsButton.setText(_translate("MainWindow", "RainbowColors"))
+        self.rainbowColorsButton.setText(_translate("MainWindow", "Rainbow Colors"))
         self.intensityGroup.setTitle(_translate("MainWindow", "Intensity"))
         self.intensityLabel.setText(_translate("MainWindow", "255"))
         self.intensityButton.setText(_translate("MainWindow", "Set Intensity"))
@@ -245,4 +269,6 @@ if __name__ == "__main__":
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
-    sys.exit(app.exec_())
+    ret = app.exec_()
+    ui.stop_worker()
+    sys.exit(ret)
