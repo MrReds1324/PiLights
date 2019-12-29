@@ -31,9 +31,11 @@ class Ui_MainWindow(object):
                 colors = self.generate_from_image(image)
                 data = self.buildGenericJSON(False)
                 data['colors'] = colors
-                self.CONNECTION.request('POST', '/solidArr', json.dumps(data))
-                doc = self.CONNECTION.getresponse().read()
-                print(doc)
+                try:
+                    self.CONNECTION.request('POST', '/solidArr', json.dumps(data))
+                    print(self.CONNECTION.getresponse().read())
+                except Exception as e:
+                    print(e)
                 if item.get('screen') == 'animate':
                     animate = True
                 else:
