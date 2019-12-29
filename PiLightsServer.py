@@ -18,6 +18,7 @@ PIXEL_COUNT = 31
 SPI_PORT = 0
 SPI_DEVICE = 0
 INTENSITY = 10
+RATIO = INTENSITY/255
 QUEUE = queue.Queue()
 
 pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
@@ -31,13 +32,13 @@ def get_IP():
 # Define the wheel function to interpolate between different hues.
 def wheel(pos):
     if pos < 85:
-        return Adafruit_WS2801.RGB_to_color(pos * 3, 255 - pos * 3, 0)
+        return Adafruit_WS2801.RGB_to_color(int(pos * 3 * RATIO), int((255 - pos * 3) * RATIO), 0)
     elif pos < 170:
         pos -= 85
-        return Adafruit_WS2801.RGB_to_color(255 - pos * 3, 0, pos * 3)
+        return Adafruit_WS2801.RGB_to_color(int((255 - pos * 3) * RATIO), 0, int(pos * 3 * RATIO))
     else:
         pos -= 170
-        return Adafruit_WS2801.RGB_to_color(0, pos * 3, 255 - pos * 3)
+        return Adafruit_WS2801.RGB_to_color(0, int(pos * 3 * RATIO), int((255 - pos * 3) * RATIO))
 
 
 # Define rainbow cycle function to do a cycle of all hues.
@@ -48,7 +49,6 @@ def rainbow_cycle_successive(pixels, wait=0):
         # Then add in j which makes the colors go around per pixel
         # the % 96 is to make the wheel cycle around
         pixels.set_pixel(i, wheel(((i * 256 // pixels.count())) % 256))
-        set_intensity(i)
         pixels.show()
         if wait > 0:
             time.sleep(wait)
@@ -58,7 +58,6 @@ def rainbow_cycle(pixels, wait=0.005):
     for j in range(256):  # one cycle of all 256 colors in the wheel
         for i in range(pixels.count()):
             pixels.set_pixel(i, wheel(((i * 256 // pixels.count()) + j) % 256))
-            set_intensity(i)
         pixels.show()
         if wait > 0:
             time.sleep(wait)
@@ -68,7 +67,6 @@ def rainbow_colors(pixels, wait=0.05):
     for j in range(256):  # one cycle of all 256 colors in the wheel
         for i in range(pixels.count()):
             pixels.set_pixel(i, wheel(((256 // pixels.count() + j)) % 256))
-            set_intensity(i)
         pixels.show()
         if wait > 0:
             time.sleep(wait)
@@ -106,11 +104,9 @@ def appear_from_back(pixels, color=[255, 0, 0], wait=0):
             pixels.clear()
             # first set all pixels at the begin
             for k in range(i):
-                pixels.set_pixel(k, Adafruit_WS2801.RGB_to_color(color[0], color[2], color[1]))
-                set_intensity(k)
+                pixels.set_pixel(k, Adafruit_WS2801.RGB_to_color(int(color[0] * RATIO), int(color[2] * RATIO), int(color[1] * RATIO)))
             # set then the pixel at position j
-            pixels.set_pixel(j, Adafruit_WS2801.RGB_to_color(color[0], color[2], color[1]))
-            set_intensity(j)
+            pixels.set_pixel(j, Adafruit_WS2801.RGB_to_color(int(color[0] * RATIO), int(color[2] * RATIO), int(color[1] * RATIO)))
             pixels.show()
             time.sleep(wait)
 
@@ -118,7 +114,6 @@ def appear_from_back(pixels, color=[255, 0, 0], wait=0):
 def solid_colors(pixels, color=[255, 0, 0], wait=0):
     for i in range(pixels.count()):
         pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(color[0], color[2], color[1]))
-        set_intensity(i)
         pixels.show()
         if wait > 0:
             time.sleep(wait)
@@ -126,24 +121,15 @@ def solid_colors(pixels, color=[255, 0, 0], wait=0):
 
 def solid_array(pixels, arr, wait=0):
     for i in range(pixels.count()):
-        pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(arr[i][0], arr[i][2], arr[i][1]))
-        set_intensity(i)
+        pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(int(arr[i][0] * RATIO), int(arr[i][2] * RATIO), int(arr[i][1] * RATIO)))
         pixels.show()
         if wait > 0:
             time.sleep(wait)
 
 
-def set_intensity(index):
-    try:
-        r, b, g = pixels.get_pixel_rgb(index)
-        ratio = INTENSITY / 255
-        r = int(r * ratio)
-        g = int(g * ratio)
-        b = int(b * ratio)
-        pixels.set_pixel(index, Adafruit_WS2801.RGB_to_color(r, b, g))
-    except():
-        return False
-    return True
+def set_ratio():
+    global RATIO
+    RATIO = INTENSITY / 255
 
 
 @post('/rainbowS')
@@ -191,6 +177,7 @@ def intensity_set():
             INTENSITY = min(255, intensity_target)
         else:
             INTENSITY = max(0, intensity_target)
+        set_ratio()
     else:
         QUEUE.put(build_task('intensity', req_obj))
     return "{intensity: " + str(INTENSITY) + "}"
@@ -223,16 +210,16 @@ def worker():
             if data.get('color'):
                 color = data.get('color')
             wait_time = 0
-            if data.get('wait'):
+            if data.get('wait') is not None:
                 wait_time = data.get('wait')
             colors = [(255, 0, 4)] * PIXEL_COUNT
             if data.get('colors'):
-                    colors = data.get('colors')
+                colors = data.get('colors')
             step_size = 1
             if data.get('step_size'):
                 step_size = data.get('stepSize')
             intensity_target = 255
-            if data.get('target'):
+            if data.get('target') is not None:
                 intensity_target = data.get('target')
             if item.get('task') == "appearfromback":
                 appear_from_back(pixels, color, wait_time)
@@ -243,6 +230,7 @@ def worker():
                 elif intensity_target < INTENSITY:
                     brightness_decrease(pixels, min(256, INTENSITY - intensity_target), wait_time, step_size)
                     INTENSITY = max(0, intensity_target)
+                set_ratio()
             elif item.get('task') == "solidArr":
                 solid_array(pixels, colors, wait_time)
             elif item.get('task') == "solid":
