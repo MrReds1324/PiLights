@@ -100,22 +100,6 @@ def brightness_increase(pixels, steps=256, wait=0.01, step=1):
             time.sleep(wait)
 
 
-def blink_color(pixels, blink_times=5, wait=0, color=[255, 0, 0]):
-    for i in range(blink_times):
-        # blink two times, then wait
-        pixels.clear()
-        for j in range(2):
-            for k in range(pixels.count()):
-                pixels.set_pixel(k, Adafruit_WS2801.RGB_to_color(color[0], color[2], color[1]))
-                set_intensity(k)
-            pixels.show()
-            time.sleep(0.08)
-            pixels.clear()
-            pixels.show()
-            time.sleep(0.08)
-        time.sleep(wait)
-
-
 def appear_from_back(pixels, color=[255, 0, 0], wait=0):
     for i in range(pixels.count()):
         for j in reversed(range(i, pixels.count())):
@@ -165,56 +149,35 @@ def set_intensity(index):
 @post('/rainbowS')
 def rainbow_sequence_set():
     req_obj = json.loads(request.body.read())
-    wait_time = 0.1
-    if req_obj.get('wait'):
-        wait_time = req_obj.get('wait')
-    rainbow_cycle_successive(pixels, wait_time)
+    QUEUE.put(build_task('rainbowS', req_obj))
     return '{"success": True}'
 
 
 @post('/rainbowC')
 def rainbow_cycle_set():
     req_obj = json.loads(request.body.read())
-    wait_time = 0.005
-    if req_obj.get('wait'):
-        wait_time = req_obj.get('wait')
-    rainbow_cycle(pixels, wait_time)
+    QUEUE.put(build_task('rainbowC', req_obj, True))
     return '{"success": True}'
 
 
 @post('/rainbowColors')
 def rainbow_colors_set():
     req_obj = json.loads(request.body.read())
-    wait_time = 0.05
-    if req_obj.get('wait'):
-        wait_time = req_obj.get('wait')
-    rainbow_colors(pixels, wait_time)
+    QUEUE.put(build_task('rainbowColors', req_obj, True))
     return '{"success": True}'
 
 
 @post('/solid')
 def solid_set():
     req_obj = json.loads(request.body.read())
-    wait_time = 0
-    if req_obj.get('wait'):
-        wait_time = req_obj.get('wait')
-    color = [255, 0, 0]
-    if req_obj.get('color'):
-        color = req_obj.get('color')
-    solid_colors(pixels, color, wait_time)
+    QUEUE.put(build_task('solid', req_obj))
     return '{"success": True}'
 
 
 @post('/solidArr')
 def solid_arr_set():
     req_obj = json.loads(request.body.read())
-    wait_time = 0
-    if req_obj.get('wait'):
-        wait_time = req_obj.get('wait')
-    colors = [(255, 0, 4)] * PIXEL_COUNT
-    if req_obj.get('colors'):
-        colors = req_obj.get('colors')
-    solid_array(pixels, colors, wait_time)
+    QUEUE.put(build_task('solidArr', req_obj))
     return '{"success": True}'
 
 
@@ -223,24 +186,13 @@ def intensity_set():
     global INTENSITY
     req_obj = json.loads(request.body.read())
     intensity_target = req_obj.get('target')
-    wait_time = 0.01
-    if req_obj.get('wait'):
-        wait_time = req_obj.get('wait')
-    step_size = 1
-    if req_obj.get('step_size'):
-        step_size = req_obj.get('stepSize')
     if req_obj.get('force') and req_obj.get('force') == "True":
         if intensity_target > INTENSITY:
             INTENSITY = min(255, intensity_target)
         else:
             INTENSITY = max(0, intensity_target)
     else:
-        if intensity_target > INTENSITY:
-            brightness_increase(pixels, min(256, intensity_target - INTENSITY), wait_time, step_size)
-            INTENSITY = min(255, intensity_target)
-        elif intensity_target < INTENSITY:
-            brightness_decrease(pixels, min(256, INTENSITY - intensity_target), wait_time, step_size)
-            INTENSITY = max(0, intensity_target)
+        QUEUE.put(build_task('intensity', req_obj))
     return "{intensity: " + str(INTENSITY) + "}"
 
 
@@ -254,6 +206,7 @@ def build_task(task, body, replay=False):
     return {'task': task, 'body': body, 'replay': replay}
 
 def worker():
+    global INTENSITY
     while True:
         item = QUEUE.get()
         # This ends the worker thread and sets the last light to be red to indicate the server is not running properly1wqa1
@@ -264,6 +217,7 @@ def worker():
             print(QUEUE.empty())
             break
         else:
+            # Parse out all possible information for each light function
             data = item.get('body')
             color = [255, 0, 4]
             if data.get('color'):
@@ -271,8 +225,34 @@ def worker():
             wait_time = 0
             if data.get('wait'):
                 wait_time = data.get('wait')
+            colors = [(255, 0, 4)] * PIXEL_COUNT
+            if data.get('colors'):
+                    colors = data.get('colors')
+            step_size = 1
+            if data.get('step_size'):
+                step_size = data.get('stepSize')
+            intensity_target = 255
+            if data.get('target'):
+                intensity_target = data.get('target')
             if item.get('task') == "appearfromback":
                 appear_from_back(pixels, color, wait_time)
+            elif item.get('task') == "intensity":
+                if intensity_target > INTENSITY:
+                    brightness_increase(pixels, min(256, intensity_target - INTENSITY), wait_time, step_size)
+                    INTENSITY = min(255, intensity_target)
+                elif intensity_target < INTENSITY:
+                    brightness_decrease(pixels, min(256, INTENSITY - intensity_target), wait_time, step_size)
+                    INTENSITY = max(0, intensity_target)
+            elif item.get('task') == "solidArr":
+                solid_array(pixels, colors, wait_time)
+            elif item.get('task') == "solid":
+                solid_colors(pixels, color, wait_time)
+            elif item.get('task') == "rainbowColors":
+                rainbow_colors(pixels, wait_time)
+            elif item.get('task') == "rainbowC":
+                rainbow_cycle(pixels, wait_time)
+            elif item.get('task') == "rainbowS":
+                rainbow_cycle_successive(pixels, wait_time)
         QUEUE.task_done()
         if item.get('replay') and QUEUE.empty():
             QUEUE.put(item)
