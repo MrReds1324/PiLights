@@ -8,6 +8,9 @@ import Adafruit_GPIO.SPI as SPI
 from bottle import run, post, request, response
 # Dynamically find IP
 import socket
+# Create thread to handle replaying certain animations forever
+import threading
+import queue
 
 IP = ""
 PIXEL_COUNT = 31
@@ -15,6 +18,7 @@ PIXEL_COUNT = 31
 SPI_PORT = 0
 SPI_DEVICE = 0
 INTENSITY = 10
+QUEUE = queue.Queue()
 
 pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
 
@@ -206,6 +210,7 @@ def solid_set():
     solid_colors(pixels, red, blue, green, wait_time)
     return '{"success": True}'
 
+
 @post('/solidArr')
 def solid_arr_set():
     req_obj = json.loads(request.body.read())
@@ -217,6 +222,7 @@ def solid_arr_set():
         colors = req_obj.get('colors')
     solid_array(pixels, colors, wait_time)
     return '{"success": True}'
+
 
 @post('/intensity')
 def intensity_set():
@@ -250,8 +256,36 @@ def appear_from_back_set():
     color = (255, 0, 4)
     if req_obj.get('color'):
         color = req_obj.get('color')
-    appear_from_back(pixels, color)
+    #appear_from_back(pixels, color)
+    QUEUE.put(None)
     return '{"success": True}'
+
+
+def worker():
+    while True:
+        item = QUEUE.get()
+        # This ends the worker thread and sets the last light to be red to indicate the server is not running properly
+        if item is None:
+            pixels.clear()
+            pixels.set_pixel(30, Adafruit_WS2801.RGB_to_color(255, 0, 0))
+            pixels.show()
+            print(QUEUE.empty())
+            break
+        QUEUE.task_done()
+
+
+def start_worker():
+    thread = threading.Thread(target=worker)
+    thread.start()
+    return thread
+
+
+WORKER = start_worker()
+
+
+def stop_worker():
+    QUEUE.put(None)
+    WORKER.join()
 
 
 pixels.clear()
@@ -259,3 +293,4 @@ pixels.show()
 get_IP()
 print(IP)
 run(host=IP, port=8080, debug=True)
+stop_worker()
