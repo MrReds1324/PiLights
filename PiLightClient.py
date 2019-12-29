@@ -68,16 +68,33 @@ class Ui_MainWindow(object):
         self.QUEUE.put(None)
         self.WORKER.join()
 
+    def populate_from_config(self):
+        with open('config', 'r') as config:
+            content = config.read()
+        content = json.loads(content)
+        if content.get('IP'):
+            self.IP = content.get('IP')
+        if content.get('PIXEL_COUNT'):
+            self.PIXEL_COUNT = content.get('PIXEL_COUNT')
+        if content.get('RESOLUTION'):
+            self.RESOLUTION = content.get('RESOLTION')
+        if content.get('DEFAULT_WAIT'):
+            self.WAIT = content.get('DEFAULT_WAIT')
+
     def setupUi(self, MainWindow):
         self.COLOR = QColor(255, 0, 4)
         self.INTENSITY = 0
-        self.IP = "127.0.0.1"
-        self.WAIT = 0.01
-        self.CONNECTION = http.client.HTTPConnection('192.168.1.223', 8080)
+        self.IP = ""
+        self.WAIT = 0
+        self.PIXEL_COUNT = 1
+        self.RESOLUTION = []
+
+        self.populate_from_config()
+
+        self.CONNECTION = http.client.HTTPConnection(self.IP, 8080)
         self.QUEUE = queue.Queue()
         self.WORKER = self.start_worker()
-        self.PIXEL_COUNT = 31
-        self.RESOLUTION = (1920, 1080)
+
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(242, 581)
@@ -314,9 +331,9 @@ class Ui_MainWindow(object):
         self.miscGroup.setTitle(_translate("MainWindow", "Miscellaneous"))
         self.fromScreenAnimate.setText(_translate("MainWindow", "Animate From Screen"))
         self.waitLabel.setText(_translate("MainWindow", "Wait Time"))
-        self.waitLine.setText(_translate("MainWindow", "0.01"))
+        self.waitLine.setText(_translate("MainWindow", str(self.WAIT)))
         self.ipLabel.setText(_translate("MainWindow", "IP Address"))
-        self.ipLine.setText(_translate("MainWindow", "192.168.1.223"))
+        self.ipLine.setText(_translate("MainWindow", self.IP))
 
 
 if __name__ == "__main__":

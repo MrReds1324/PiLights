@@ -1,0 +1,6 @@
+{
+"IP": "127.0.0.1",
+"PIXEL_COUNT": 31,
+"DEFAULT_WAIT": 0.01,
+"RESOLUTION": [1920,1080]
+}
