@@ -77,7 +77,7 @@ class Ui_MainWindow(object):
         if content.get('PIXEL_COUNT'):
             self.PIXEL_COUNT = content.get('PIXEL_COUNT')
         if content.get('RESOLUTION'):
-            self.RESOLUTION = content.get('RESOLTION')
+            self.RESOLUTION = content.get('RESOLUTION')
         if content.get('DEFAULT_WAIT'):
             self.WAIT = content.get('DEFAULT_WAIT')
 
