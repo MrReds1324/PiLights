@@ -113,7 +113,7 @@ def appear_from_back(pixels, color=[255, 0, 0], wait=0):
 
 def solid_colors(pixels, color=[255, 0, 0], wait=0):
     for i in range(pixels.count()):
-        pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(color[0], color[2], color[1]))
+        pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(int(color[0] * RATIO), int(color[2] * RATIO), int(color[1] * RATIO)))
         pixels.show()
         if wait > 0:
             time.sleep(wait)
