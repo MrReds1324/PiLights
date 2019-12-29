@@ -20,12 +20,13 @@ def get_max(arr):
 class Ui_MainWindow(object):
 
     def worker(self):
+        animate = False
         while True:
             item = self.QUEUE.get()
             if item is None:
                 print("EXITING WORKER")
                 break
-            else:
+            elif item.get('screen') is not None:
                 image = pyautogui.screenshot()
                 colors = self.generate_from_image(image)
                 data = self.buildGenericJSON(False)
@@ -33,15 +34,28 @@ class Ui_MainWindow(object):
                 self.CONNECTION.request('POST', '/solidArr', json.dumps(data))
                 doc = self.CONNECTION.getresponse().read()
                 print(doc)
+                if item.get('screen') == 'animate':
+                    animate = True
+                else:
+                    animate = False
+            else:
+                animate = False
             self.QUEUE.task_done()
+            time.sleep(0.35)
+            if animate and self.QUEUE.empty():
+                self.QUEUE.put({'screen': 'animate'})
 
     def generate_from_image(self, image):
         x_start = 0
+        # Calculates column width for the given picture to fill an LED
         x_inc = self.RESOLUTION[0]//self.PIXEL_COUNT
         colors = []
         for i in range(self.PIXEL_COUNT):
+            # Generates a box with the given column width
             crop = image.crop((x_start, 0, x_start + x_inc, self.RESOLUTION[1]))
+            # get_max returns (x, (x, x, x)) where the second tuple is the RGB value, we need to transform into a list for JSON
             colors.append(list(get_max(crop.getcolors(x_inc * self.RESOLUTION[1]))[1]))
+            # Moves the box over to the next column/LED
             x_start += x_inc
         return colors
 
@@ -198,6 +212,7 @@ class Ui_MainWindow(object):
         self.animateIntensityButton.clicked.connect(self.animateIntesnity)
         self.ipLine.returnPressed.connect(self.setIP)
         self.waitLine.returnPressed.connect(self.setWait)
+        self.fromScreenAnimate.clicked.connect(self.animateFromScreen)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def openColorDialog(self):
@@ -216,54 +231,69 @@ class Ui_MainWindow(object):
         return data
 
     def sendSolidColor(self):
-        self.CONNECTION.request('POST', '/solid', json.dumps(self.buildGenericJSON()))
-        doc = self.CONNECTION.getresponse().read()
-        print(doc)
+        try:
+            self.QUEUE.put({'clear': True})
+            self.CONNECTION.request('POST', '/solid', json.dumps(self.buildGenericJSON()))
+            print(self.CONNECTION.getresponse().read())
+        except Exception as e:
+            print(e)
 
     def loopFromBack(self):
-        self.CONNECTION.request('POST', '/appearfromback', json.dumps(self.buildGenericJSON()))
-        doc = self.CONNECTION.getresponse().read()
-        print(doc)
+        try:
+            self.QUEUE.put({'clear': True})
+            self.CONNECTION.request('POST', '/appearfromback', json.dumps(self.buildGenericJSON()))
+            print(self.CONNECTION.getresponse().read())
+        except Exception as e:
+            print(e)
 
     def setIntesity(self):
-        data = self.buildGenericJSON()
-        data['force'] = "True"
-        self.CONNECTION.request('POST', '/intensity', json.dumps(data))
-        doc = self.CONNECTION.getresponse().read()
-        print(doc)
+        try:
+            data = self.buildGenericJSON()
+            data['force'] = "True"
+            self.CONNECTION.request('POST', '/intensity', json.dumps(data))
+            print(self.CONNECTION.getresponse().read())
+        except Exception as e:
+            print(e)
 
     def animateIntesnity(self):
-        data = self.buildGenericJSON()
-        data['force'] = "False"
-        self.CONNECTION.request('POST', '/intensity', json.dumps(data))
-        doc = self.CONNECTION.getresponse().read()
-        print(doc)
+        try:
+            self.QUEUE.put({'clear': True})
+            data = self.buildGenericJSON()
+            data['force'] = "False"
+            self.CONNECTION.request('POST', '/intensity', json.dumps(data))
+            print(self.CONNECTION.getresponse().read())
+        except Exception as e:
+            print(e)
 
     def rainbowSequence(self):
-        self.CONNECTION.request('POST', '/rainbowS', json.dumps(self.buildGenericJSON()))
-        doc = self.CONNECTION.getresponse().read()
-        print(doc)
+        try:
+            self.QUEUE.put({'clear': True})
+            self.CONNECTION.request('POST', '/rainbowS', json.dumps(self.buildGenericJSON()))
+            print(self.CONNECTION.getresponse().read())
+        except Exception as e:
+            print(e)
 
     def rainbowCycle(self):
-        self.CONNECTION.request('POST', '/rainbowC', json.dumps(self.buildGenericJSON()))
-        doc = self.CONNECTION.getresponse().read()
-        print(doc)
+        try:
+            self.QUEUE.put({'clear': True})
+            self.CONNECTION.request('POST', '/rainbowC', json.dumps(self.buildGenericJSON()))
+            print(self.CONNECTION.getresponse().read())
+        except Exception as e:
+            print(e)
 
     def rainbowColors(self):
-        self.CONNECTION.request('POST', '/rainbowColors', json.dumps(self.buildGenericJSON()))
-        doc = self.CONNECTION.getresponse().read()
-        print(doc)
+        try:
+            self.QUEUE.put({'clear': True})
+            self.CONNECTION.request('POST', '/rainbowColors', json.dumps(self.buildGenericJSON()))
+            print(self.CONNECTION.getresponse().read())
+        except Exception as e:
+            print(e)
 
     def solidFromScreen(self):
-        self.QUEUE.put(1)
+        self.QUEUE.put({'screen': 'static'})
 
     def animateFromScreen(self):
-        self.CONNECTION.request('POST', '/solidArr', json.dumps(self.buildGenericJSON()))
-        doc = self.CONNECTION.getresponse().read()
-        print(doc)
-
-    def closeEvent(self, event):
-        print("close")
+        self.QUEUE.put({'screen': 'animate'})
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
