@@ -6,6 +6,16 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QColorDialog
 import queue
+import pyautogui
+
+
+def get_max(arr):
+    max_c = (0, (0, 0, 0))
+    for pix in arr:
+        if pix[0] > max_c[0]:
+            max_c = pix
+    return max_c
+
 
 class Ui_MainWindow(object):
 
@@ -15,7 +25,25 @@ class Ui_MainWindow(object):
             if item is None:
                 print("EXITING WORKER")
                 break
+            else:
+                image = pyautogui.screenshot()
+                colors = self.generate_from_image(image)
+                data = self.buildGenericJSON(False)
+                data['colors'] = colors
+                self.CONNECTION.request('POST', '/solidArr', json.dumps(data))
+                doc = self.CONNECTION.getresponse().read()
+                print(doc)
             self.QUEUE.task_done()
+
+    def generate_from_image(self, image):
+        x_start = 0
+        x_inc = self.RESOLUTION[0]//self.PIXEL_COUNT
+        colors = []
+        for i in range(self.PIXEL_COUNT):
+            crop = image.crop((x_start, 0, x_start + x_inc, self.RESOLUTION[1]))
+            colors.append(list(get_max(crop.getcolors(x_inc * self.RESOLUTION[1]))[1]))
+            x_start += x_inc
+        return colors
 
     def start_worker(self):
         thread = threading.Thread(target=self.worker)
@@ -34,6 +62,8 @@ class Ui_MainWindow(object):
         self.CONNECTION = http.client.HTTPConnection('192.168.1.223', 8080)
         self.QUEUE = queue.Queue()
         self.WORKER = self.start_worker()
+        self.PIXEL_COUNT = 31
+        self.RESOLUTION = (1920, 1080)
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(242, 581)
@@ -181,8 +211,8 @@ class Ui_MainWindow(object):
     def setWait(self):
         self.WAIT = float(self.waitLine.text())
 
-    def buildGenericJSON(self):
-        data = {'wait': self.WAIT, 'target': self.intensitySlider.value(), 'color': [self.COLOR.red(), self.COLOR.green(), self.COLOR.blue()]}
+    def buildGenericJSON(self, wait=True):
+        data = {'wait': self.WAIT if wait else 0, 'target': self.intensitySlider.value(), 'color': [self.COLOR.red(), self.COLOR.green(), self.COLOR.blue()]}
         return data
 
     def sendSolidColor(self):
@@ -225,9 +255,7 @@ class Ui_MainWindow(object):
         print(doc)
 
     def solidFromScreen(self):
-        self.CONNECTION.request('POST', '/solidArr', json.dumps(self.buildGenericJSON()))
-        doc = self.CONNECTION.getresponse().read()
-        print(doc)
+        self.QUEUE.put(1)
 
     def animateFromScreen(self):
         self.CONNECTION.request('POST', '/solidArr', json.dumps(self.buildGenericJSON()))
