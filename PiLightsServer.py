@@ -25,9 +25,14 @@ pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_
 
 def get_IP():
     global IP
-    soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    soc.connect(('8.8.8.8', 1))
-    IP = soc.getsockname()[0]
+    while IP == "":
+        try:
+            soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            soc.connect(('8.8.8.8', 1))
+            IP = soc.getsockname()[0]
+        except Exception as e:
+            print("Waiting for network connection")
+            time.sleep(2.5)
 
 # Define the wheel function to interpolate between different hues.
 def wheel(pos):
