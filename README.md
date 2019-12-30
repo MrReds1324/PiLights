@@ -34,3 +34,5 @@ Requires PyAutoGui and PyQt5 which can be installed with ```pip install PyQutoGu
 Start the server and it will give you the IP to connect to. Edit the config file in the same location as PiLightsClient to have your proper screen resolution, IP, and LED count. The default wait is optional.
 
 Then simply run PiLightsClient.py if you wish to see output to the console (will be responses from the server) or PiLightsClient.pyw if you only want the GUI.
+
+Recommend following https://github.com/altendky/pyqt5-tools for pyqt5 tools that will can be used to view the .ui file and easily create pyqt GUIs.
