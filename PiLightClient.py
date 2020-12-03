@@ -32,7 +32,7 @@ class Ui_MainWindow(object):
                 data = self.buildGenericJSON(False)
                 data['colors'] = colors
                 try:
-                    self.CONNECTION.request('POST', '/solidArr', json.dumps(data))
+                    self.CONNECTION.request('POST', '/solidArray', json.dumps(data))
                     print(self.CONNECTION.getresponse().read())
                 except Exception as e:
                     print(e)
@@ -263,7 +263,7 @@ class Ui_MainWindow(object):
     def loopFromBack(self):
         try:
             self.QUEUE.put({'clear': True})
-            self.CONNECTION.request('POST', '/appearfromback', json.dumps(self.buildGenericJSON()))
+            self.CONNECTION.request('POST', '/appearFromBack', json.dumps(self.buildGenericJSON()))
             print(self.CONNECTION.getresponse().read())
         except Exception as e:
             print(e)
@@ -290,7 +290,7 @@ class Ui_MainWindow(object):
     def rainbowSequence(self):
         try:
             self.QUEUE.put({'clear': True})
-            self.CONNECTION.request('POST', '/rainbowS', json.dumps(self.buildGenericJSON()))
+            self.CONNECTION.request('POST', '/rainbowSequence', json.dumps(self.buildGenericJSON()))
             print(self.CONNECTION.getresponse().read())
         except Exception as e:
             print(e)
@@ -298,7 +298,7 @@ class Ui_MainWindow(object):
     def rainbowCycle(self):
         try:
             self.QUEUE.put({'clear': True})
-            self.CONNECTION.request('POST', '/rainbowC', json.dumps(self.buildGenericJSON()))
+            self.CONNECTION.request('POST', '/rainbowCycle', json.dumps(self.buildGenericJSON()))
             print(self.CONNECTION.getresponse().read())
         except Exception as e:
             print(e)
