@@ -32,7 +32,7 @@ class Ui_MainWindow(object):
                 data = self.buildGenericJSON(False)
                 data['colors'] = colors
                 try:
-                    self.CONNECTION.request('POST', '/solidArr', json.dumps(data))
+                    self.CONNECTION.request('POST', '/solidArray', json.dumps(data))
                     print(self.CONNECTION.getresponse().read())
                 except Exception as e:
                     print(e)
@@ -97,17 +97,14 @@ class Ui_MainWindow(object):
         self.QUEUE = queue.Queue()
         self.WORKER = self.start_worker()
 
-
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(242, 581)
+        MainWindow.resize(235, 600)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
-        MainWindow.setMaximumSize(QtCore.QSize(235, 581))
-        MainWindow.setWindowIcon(QtGui.QIcon('icon.png'))
-        self.mainWindow = MainWindow
+        MainWindow.setMaximumSize(QtCore.QSize(235, 600))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.solidGroup = QtWidgets.QGroupBox(self.centralwidget)
@@ -177,10 +174,10 @@ class Ui_MainWindow(object):
         self.animateIntensityButton.setObjectName("animateIntensityButton")
         self.IntensityLayout.addWidget(self.animateIntensityButton)
         self.miscGroup = QtWidgets.QGroupBox(self.centralwidget)
-        self.miscGroup.setGeometry(QtCore.QRect(10, 440, 221, 131))
+        self.miscGroup.setGeometry(QtCore.QRect(10, 440, 221, 151))
         self.miscGroup.setObjectName("miscGroup")
         self.verticalLayoutWidget_4 = QtWidgets.QWidget(self.miscGroup)
-        self.verticalLayoutWidget_4.setGeometry(QtCore.QRect(10, 19, 201, 41))
+        self.verticalLayoutWidget_4.setGeometry(QtCore.QRect(10, 19, 201, 63))
         self.verticalLayoutWidget_4.setObjectName("verticalLayoutWidget_4")
         self.miscLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_4)
         self.miscLayout.setContentsMargins(0, 0, 0, 0)
@@ -188,13 +185,16 @@ class Ui_MainWindow(object):
         self.fromScreenAnimate = QtWidgets.QPushButton(self.verticalLayoutWidget_4)
         self.fromScreenAnimate.setObjectName("fromScreenAnimate")
         self.miscLayout.addWidget(self.fromScreenAnimate)
+        self.twoColorAlternate = QtWidgets.QPushButton(self.verticalLayoutWidget_4)
+        self.twoColorAlternate.setObjectName("twoColorAlternate")
+        self.miscLayout.addWidget(self.twoColorAlternate)
         self.line = QtWidgets.QFrame(self.verticalLayoutWidget_4)
         self.line.setFrameShape(QtWidgets.QFrame.HLine)
         self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line.setObjectName("line")
         self.miscLayout.addWidget(self.line)
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.miscGroup)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 60, 201, 31))
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 80, 201, 31))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
@@ -207,7 +207,7 @@ class Ui_MainWindow(object):
         self.waitLine.setObjectName("waitLine")
         self.horizontalLayout_2.addWidget(self.waitLine)
         self.horizontalLayoutWidget_2 = QtWidgets.QWidget(self.miscGroup)
-        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(10, 90, 201, 31))
+        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(10, 110, 201, 31))
         self.horizontalLayoutWidget_2.setObjectName("horizontalLayoutWidget_2")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_2)
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -231,9 +231,10 @@ class Ui_MainWindow(object):
         self.rainbowSequenceButton.clicked.connect(self.rainbowSequence)
         self.intensityButton.clicked.connect(self.setIntesity)
         self.animateIntensityButton.clicked.connect(self.animateIntesnity)
-        self.ipLine.returnPressed.connect(self.setIP)
-        self.waitLine.returnPressed.connect(self.setWait)
         self.fromScreenAnimate.clicked.connect(self.animateFromScreen)
+        self.twoColorAlternate.clicked.connect(self.twoColorsAlternate)
+        self.waitLine.returnPressed.connect(self.setWait)
+        self.ipLine.returnPressed.connect(self.setIP)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def openColorDialog(self):
@@ -262,7 +263,7 @@ class Ui_MainWindow(object):
     def loopFromBack(self):
         try:
             self.QUEUE.put({'clear': True})
-            self.CONNECTION.request('POST', '/appearfromback', json.dumps(self.buildGenericJSON()))
+            self.CONNECTION.request('POST', '/appearFromBack', json.dumps(self.buildGenericJSON()))
             print(self.CONNECTION.getresponse().read())
         except Exception as e:
             print(e)
@@ -289,7 +290,7 @@ class Ui_MainWindow(object):
     def rainbowSequence(self):
         try:
             self.QUEUE.put({'clear': True})
-            self.CONNECTION.request('POST', '/rainbowS', json.dumps(self.buildGenericJSON()))
+            self.CONNECTION.request('POST', '/rainbowSequence', json.dumps(self.buildGenericJSON()))
             print(self.CONNECTION.getresponse().read())
         except Exception as e:
             print(e)
@@ -297,7 +298,7 @@ class Ui_MainWindow(object):
     def rainbowCycle(self):
         try:
             self.QUEUE.put({'clear': True})
-            self.CONNECTION.request('POST', '/rainbowC', json.dumps(self.buildGenericJSON()))
+            self.CONNECTION.request('POST', '/rainbowCycle', json.dumps(self.buildGenericJSON()))
             print(self.CONNECTION.getresponse().read())
         except Exception as e:
             print(e)
@@ -315,6 +316,17 @@ class Ui_MainWindow(object):
 
     def animateFromScreen(self):
         self.QUEUE.put({'screen': 'animate'})
+
+    def twoColorsAlternate(self):
+        try:
+            self.QUEUE.put({'clear': True})
+            firstColor = QColorDialog.getColor()
+            secondColor = QColorDialog.getColor()
+            json_data = {'wait': self.WAIT if self.WAIT else 0, 'target': self.intensitySlider.value(), 'first_color': [firstColor.red(), firstColor.green(), firstColor.blue()], 'second_color': [secondColor.red(), secondColor.green(), secondColor.blue()]}
+            self.CONNECTION.request('POST', '/twoColorAlternate', json.dumps(json_data))
+            print(self.CONNECTION.getresponse().read())
+        except Exception as e:
+            print(e)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -334,6 +346,7 @@ class Ui_MainWindow(object):
         self.animateIntensityButton.setText(_translate("MainWindow", "Animate Intensity"))
         self.miscGroup.setTitle(_translate("MainWindow", "Miscellaneous"))
         self.fromScreenAnimate.setText(_translate("MainWindow", "Animate From Screen"))
+        self.twoColorAlternate.setText(_translate("MainWindow", "Two Color Alternate"))
         self.waitLabel.setText(_translate("MainWindow", "Wait Time"))
         self.waitLine.setText(_translate("MainWindow", str(self.WAIT)))
         self.ipLabel.setText(_translate("MainWindow", "IP Address"))
