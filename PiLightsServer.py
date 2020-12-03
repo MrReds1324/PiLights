@@ -137,17 +137,17 @@ def set_ratio():
     RATIO = INTENSITY / 255
 
 
-@post('/rainbowS')
+@post('/rainbowSequence')
 def rainbow_sequence_set():
     req_obj = json.loads(request.body.read())
-    QUEUE.put(build_task('rainbowS', req_obj))
+    QUEUE.put(build_task('rainbowSequence', req_obj))
     return '{"success": True}'
 
 
-@post('/rainbowC')
+@post('/rainbowCycle')
 def rainbow_cycle_set():
     req_obj = json.loads(request.body.read())
-    QUEUE.put(build_task('rainbowC', req_obj, True))
+    QUEUE.put(build_task('rainbowCycle', req_obj, True))
     return '{"success": True}'
 
 
@@ -165,10 +165,10 @@ def solid_set():
     return '{"success": True}'
 
 
-@post('/solidArr')
+@post('/solidArray')
 def solid_arr_set():
     req_obj = json.loads(request.body.read())
-    QUEUE.put(build_task('solidArr', req_obj))
+    QUEUE.put(build_task('solidArray', req_obj))
     return '{"success": True}'
 
 
@@ -188,10 +188,10 @@ def intensity_set():
     return "{intensity: " + str(INTENSITY) + "}"
 
 
-@post('/appearfromback')
+@post('/appearFromBack')
 def appear_from_back_set():
     req_obj = json.loads(request.body.read())
-    QUEUE.put(build_task('appearfromback', req_obj, True))
+    QUEUE.put(build_task('appearFromBack', req_obj, True))
     return '{"success": True}'
 
 def build_task(task, body, replay=False):
@@ -228,6 +228,7 @@ def worker():
                 intensity_target = data.get('target')
             if item.get('task') == "appearfromback":
                 appear_from_back(pixels, color, wait_time)
+            if item.get('task') == "appearFromBack":
             elif item.get('task') == "intensity":
                 if intensity_target > INTENSITY:
                     brightness_increase(pixels, min(256, intensity_target - INTENSITY), wait_time, step_size)
@@ -236,15 +237,15 @@ def worker():
                     brightness_decrease(pixels, min(256, INTENSITY - intensity_target), wait_time, step_size)
                     INTENSITY = max(0, intensity_target)
                 set_ratio()
-            elif item.get('task') == "solidArr":
-                solid_array(pixels, colors, wait_time)
+            elif item.get('task') == "solidArray":
+                solid_array(pixels, data.get('colors', [(255, 0, 4)] * PIXEL_COUNT), wait_time)
             elif item.get('task') == "solid":
-                solid_colors(pixels, color, wait_time)
+                solid_colors(pixels, data.get('color', [255, 0, 4]), wait_time)
             elif item.get('task') == "rainbowColors":
                 rainbow_colors(pixels, wait_time)
-            elif item.get('task') == "rainbowC":
+            elif item.get('task') == "rainbowCycle":
                 rainbow_cycle(pixels, wait_time)
-            elif item.get('task') == "rainbowS":
+            elif item.get('task') == "rainbowSequence":
                 rainbow_cycle_successive(pixels, wait_time)
         QUEUE.task_done()
         if item.get('replay') and QUEUE.empty():
