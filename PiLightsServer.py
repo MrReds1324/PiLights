@@ -18,10 +18,11 @@ PIXEL_COUNT = 31
 SPI_PORT = 0
 SPI_DEVICE = 0
 INTENSITY = 10
-RATIO = INTENSITY/255
+RATIO = INTENSITY / 255
 QUEUE = queue.Queue()
 
 pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
+
 
 def get_IP():
     global IP
@@ -33,6 +34,7 @@ def get_IP():
         except Exception as e:
             print("Waiting for network connection")
             time.sleep(2.5)
+
 
 # Define the wheel function to interpolate between different hues.
 def wheel(pos):
@@ -132,6 +134,23 @@ def solid_array(pixels, arr, wait=0):
             time.sleep(wait)
 
 
+def two_colors_alternate(pixels, first_color, second_color, wait=0):
+    for i in range(pixels.count()):
+        if i % 2 == 0:
+            pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(int(first_color[0] * RATIO), int(first_color[2] * RATIO), int(first_color[1] * RATIO)))
+        else:
+            pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(int(second_color[0] * RATIO), int(second_color[2] * RATIO), int(second_color[1] * RATIO)))
+    pixels.show()
+    time.sleep(wait)
+    for i in range(pixels.count()):
+        if i % 2 == 0:
+            pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(int(second_color[0] * RATIO), int(second_color[2] * RATIO), int(second_color[1] * RATIO)))
+        else:
+            pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(int(first_color[0] * RATIO), int(first_color[2] * RATIO), int(first_color[1] * RATIO)))
+    pixels.show()
+    time.sleep(wait)
+
+
 def set_ratio():
     global RATIO
     RATIO = INTENSITY / 255
@@ -194,8 +213,17 @@ def appear_from_back_set():
     QUEUE.put(build_task('appearFromBack', req_obj, True))
     return '{"success": True}'
 
+
+@post('/twoColorAlternate')
+def two_color_alternate():
+    req_obj = json.loads(request.body.read())
+    QUEUE.put(build_task('twoColorAlternate', req_obj, True))
+    return '{"success": True}'
+
+
 def build_task(task, body, replay=False):
     return {'task': task, 'body': body, 'replay': replay}
+
 
 def worker():
     global INTENSITY
@@ -234,6 +262,8 @@ def worker():
                 rainbow_cycle(pixels, wait_time)
             elif item.get('task') == "rainbowSequence":
                 rainbow_cycle_successive(pixels, wait_time)
+            elif item.get('task') == 'twoColorAlternate':
+                two_colors_alternate(pixels, data.get('first_color', [255, 0, 4]), data.get('second_color', [4, 0, 255]), wait_time)
         QUEUE.task_done()
         if item.get('replay') and QUEUE.empty():
             QUEUE.put(item)
