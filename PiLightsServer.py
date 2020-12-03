@@ -229,6 +229,7 @@ def worker():
     global INTENSITY
     while True:
         item = QUEUE.get()
+        print(item)
         # This ends the worker thread and sets the last light to be red to indicate the server is not running properly1wqa1
         if item is None:
             pixels.clear()
