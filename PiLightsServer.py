@@ -211,25 +211,12 @@ def worker():
         else:
             # Parse out all possible information for each light function
             data = item.get('body')
-            color = [255, 0, 4]
-            if data.get('color'):
-                color = data.get('color')
-            wait_time = 0
-            if data.get('wait') is not None:
-                wait_time = data.get('wait')
-            colors = [(255, 0, 4)] * PIXEL_COUNT
-            if data.get('colors'):
-                colors = data.get('colors')
-            step_size = 1
-            if data.get('step_size'):
-                step_size = data.get('stepSize')
-            intensity_target = 255
-            if data.get('target') is not None:
-                intensity_target = data.get('target')
-            if item.get('task') == "appearfromback":
-                appear_from_back(pixels, color, wait_time)
+            wait_time = data.get('wait', 0)
+            intensity_target = data.get('target', 255)
             if item.get('task') == "appearFromBack":
+                appear_from_back(pixels, data.get('color', [255, 0, 4]), wait_time)
             elif item.get('task') == "intensity":
+                step_size = data.get('stepSize', 1)
                 if intensity_target > INTENSITY:
                     brightness_increase(pixels, min(256, intensity_target - INTENSITY), wait_time, step_size)
                     INTENSITY = min(255, intensity_target)
