@@ -130,11 +130,11 @@ def solid_array(pixels, arr, wait=0):
     for i in range(pixels.count()):
         pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(int(arr[i][0] * RATIO), int(arr[i][2] * RATIO), int(arr[i][1] * RATIO)))
         pixels.show()
-        if wait > 0:
-            time.sleep(wait)
+    if wait > 0:
+        time.sleep(wait)
 
 
-def two_colors_alternate(pixels, first_color, second_color, wait=0):
+def two_colors_alternate(pixels, first_color, second_color, wait=1):
     for i in range(pixels.count()):
         if i % 2 == 0:
             pixels.set_pixel(i, Adafruit_WS2801.RGB_to_color(int(first_color[0] * RATIO), int(first_color[2] * RATIO), int(first_color[1] * RATIO)))
